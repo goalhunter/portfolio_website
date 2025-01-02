@@ -26,10 +26,10 @@ jobs:
     - name: Build and push container image
       uses: docker/build-push-action@v5
       with:
-        context: .
+        context: .  # Ensure correct build context
+        file: ./Dockerfile  # Explicitly specify Dockerfile location
         push: true
         tags: mcr.microsoft.com/appsvc/staticsite:${{ github.sha }}
-        file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
