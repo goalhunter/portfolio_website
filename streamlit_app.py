@@ -40,7 +40,7 @@ project_5_page = st.Page(
 pg = st.navigation(
     {
         "Info": [about_page],
-        "Live Projects": [project_5_page, project_2_page, project_3_page, project_4_page, project_1_page],
+        "Live Projects": [project_5_page, project_3_page, project_4_page, project_1_page],
     }
 )
 
