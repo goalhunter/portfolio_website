@@ -1,0 +1,70 @@
+trigger:
+  - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildAndPrepare
+        steps:
+          - checkout: self
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.10'
+            displayName: 'Set up Python 3.10'
+
+          - script: |
+              python -m venv venv
+              source venv/bin/activate
+              pip install -r requirements.txt
+            displayName: 'Install dependencies'
+
+          # Make run.sh executable
+          - script: chmod +x run.sh
+            displayName: 'Set run.sh permissions'
+
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+            displayName: 'Zip artifact for deployment'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'python-app'
+            displayName: 'Publish artifact'
+
+  - stage: Deploy
+    jobs:
+      - deployment: DeployToWebApp
+        environment: 'Production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadBuildArtifacts@1
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'python-app'
+                    downloadPath: '$(System.ArtifactsDirectory)'
+
+                - task: AzureWebApp@1
+                  inputs:
+                    azureSubscription: 'b302084d-b9a9-4c7c-ac36-837444fe4a24'
+                    appType: 'webAppLinux'
+                    appName: 'parthbhanderi'
+                    package: '$(System.ArtifactsDirectory)/**/*.zip'
+                    slotName: 'Production'
+
+                # Optional: Execute run.sh after deployment
+                - script: |
+                    chmod +x run.sh
+                    ./run.sh
+                  displayName: 'Execute run.sh'
