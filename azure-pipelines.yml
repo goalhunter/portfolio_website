@@ -70,4 +70,4 @@ jobs:
       - name: Execute run.sh
         run: |
           chmod +x run.sh
-          ./run.sh
+          ./run.sh 
