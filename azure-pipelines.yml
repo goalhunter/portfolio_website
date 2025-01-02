@@ -57,7 +57,7 @@ stages:
 
                 - task: AzureWebApp@1
                   inputs:
-                    azureSubscription: 'b302084d-b9a9-4c7c-ac36-837444fe4a24'
+                    azureSubscription: 'parthbhanderi-azure-connection'
                     appType: 'webAppLinux'
                     appName: 'parthbhanderi'
                     package: '$(System.ArtifactsDirectory)/**/*.zip'
