@@ -1,70 +1,99 @@
-trigger:
-  - master
+name: Build and deploy Python app to Azure Web App - parthbhanderi
 
-pool:
-  vmImage: 'ubuntu-latest'
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
-stages:
-  - stage: Build
-    jobs:
-      - job: BuildAndPrepare
-        steps:
-          - checkout: self
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: '3.10'
-            displayName: 'Set up Python 3.10'
+    steps:
+      - uses: actions/checkout@v4
 
-          - script: |
-              python -m venv venv
-              source venv/bin/activate
-              pip install -r requirements.txt
-            displayName: 'Install dependencies'
+      - name: Set up Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-          # Make run.sh executable
-          - script: chmod +x run.sh
-            displayName: 'Set run.sh permissions'
+      - name: Create and start virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      # Make run.sh executable
+      - name: Make run.sh executable
+        run: chmod +x run.sh
 
-          - task: ArchiveFiles@2
-            inputs:
-              rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
-              includeRootFolder: false
-              archiveType: 'zip'
-              archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-            displayName: 'Zip artifact for deployment'
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
 
-          - task: PublishBuildArtifacts@1
-            inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-              ArtifactName: 'python-app'
-            displayName: 'Publish artifact'
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            release.zip
+            !venv/
 
-  - stage: Deploy
-    jobs:
-      - deployment: DeployToWebApp
-        environment: 'Production'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - task: DownloadBuildArtifacts@1
-                  inputs:
-                    buildType: 'current'
-                    downloadType: 'single'
-                    artifactName: 'python-app'
-                    downloadPath: '$(System.ArtifactsDirectory)'
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    permissions:
+      id-token: write
 
-                - task: AzureWebApp@1
-                  inputs:
-                    azureSubscription: 'parthbhanderi-azure-connection'
-                    appType: 'webAppLinux'
-                    appName: 'parthbhanderi'
-                    package: '$(System.ArtifactsDirectory)/**/*.zip'
-                    slotName: 'Production'
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app
 
-                # Optional: Execute run.sh after deployment
-                - script: |
-                    chmod +x run.sh
-                    ./run.sh
-                  displayName: 'Execute run.sh'
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
+
+      - name: Make run.sh executable
+        run: chmod +x run.sh
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0C0BDC2E61574D0CA03B829AC1A9DBBA }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6ABA8D37F2DF42A0A16FCAC94402CD33 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E078F6B01BB2468FA6191B8DD771AC84 }}
+
+      - name: Configure App Service settings
+        uses: Azure/appservice-settings@v1
+        with:
+          app-name: 'parthbhanderi'
+          app-settings-json: |
+            [
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "true"
+              },
+              {
+                "name": "STARTUP_COMMAND",
+                "value": "./run.sh"
+              }
+            ]
+
+      - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
+        with:
+          app-name: 'parthbhanderi'
+          slot-name: 'Production'
+
+      # Optional: Run run.sh after deployment
+      - name: Execute run.sh
+        run: |
+          chmod +x run.sh
+          ./run.sh
