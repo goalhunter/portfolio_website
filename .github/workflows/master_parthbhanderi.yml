@@ -150,18 +150,6 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
-
-      - name: Stop Azure Web App
-        run: |
-          az webapp stop --name parthbhanderi --resource-group your-resource-group-name
-        continue-on-error: true
-
       - name: Configure virtual environment for deployment
         run: |
           python -m venv venv
@@ -179,11 +167,6 @@ jobs:
         id: deploy-to-webapp
         with:
           app-name: 'parthbhanderi'
-          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
           clean: true
-
-      - name: Start Azure Web App
-        run: |
-          az webapp start --name parthbhanderi --resource-group your-resource-group-name
-        continue-on-error: true
