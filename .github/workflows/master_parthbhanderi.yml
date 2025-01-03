@@ -1,89 +1,3 @@
-# name: Build and deploy Python app to Azure Web App - parthbhanderi
-
-# on:
-#   push:
-#     branches:
-#       - master
-#   workflow_dispatch:
-
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - uses: actions/checkout@v4
-
-#       - name: Set up Python version
-#         uses: actions/setup-python@v5
-#         with:
-#           python-version: '3.10'
-
-#       - name: Remove existing virtual environment if it exists
-#         run: |
-#           if [ -d "venv" ]; then
-#             rm -rf venv
-#           fi
-
-#       - name: Create and start virtual environment
-#         run: |
-#           python -m venv venv
-#           source venv/bin/activate
-
-#       - name: Install dependencies
-#         run: |
-#           source venv/bin/activate
-#           pip install -r requirements.txt
-
-#       - name: Make run.sh executable
-#         run: chmod +x run.sh
-
-#       - name: Zip artifact for deployment
-#         run: zip release.zip ./* -r
-
-#       - name: Upload artifact for deployment jobs
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: python-app
-#           path: |
-#             release.zip
-#             !venv/
-
-#   deploy:
-#     runs-on: ubuntu-latest
-#     needs: build
-#     environment:
-#       name: 'Production'
-#       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
-#     steps:
-#       - name: Download artifact from build job
-#         uses: actions/download-artifact@v4
-#         with:
-#           name: python-app
-
-#       - name: Unzip artifact for deployment
-#         run: unzip release.zip
-
-#       - name: Configure virtual environment for deployment
-#         run: |
-#           python -m venv venv
-#           source venv/bin/activate
-#           pip install -r requirements.txt
-
-#       - name: Make run.sh executable and verify environment
-#         run: |
-#           chmod +x run.sh
-#           echo "Using Python: $(which python)"
-#           pip list  # Debug installed packages
-
-#       - name: Deploy to Azure Web App
-#         uses: azure/webapps-deploy@v3
-#         id: deploy-to-webapp
-#         with:
-#           app-name: 'parthbhanderi'
-#           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-#           package: .
-
 name: Build and deploy Python app to Azure Web App - parthbhanderi
 
 on:
@@ -192,6 +106,18 @@ jobs:
           else
             echo "Deployments directory does not exist. Skipping cleanup."
           fi
+      
+      - name: Configure App Service settings
+        uses: Azure/appservice-settings@v1
+        with:
+          app-name: 'parthb'
+          app-settings-json: |
+            [
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "true"
+              }
+            ]
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
