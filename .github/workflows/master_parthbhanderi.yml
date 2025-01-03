@@ -168,6 +168,31 @@ jobs:
           echo "Using Python: $(which python)"
           pip list
 
+      - name: Cleanup Azure Web App Deployment Locks
+        run: |
+          # Cleanup lock files
+          if [ -d "/home/site/locks" ]; then
+            echo "Locks directory exists. Checking for lock files..."
+            if [ -f "/home/site/locks/status.lock" ]; then
+              echo "Deleting status.lock..."
+              rm -f /home/site/locks/status.lock
+            fi
+            if [ -f "/home/site/locks/info.lock" ]; then
+              echo "Deleting info.lock..."
+              rm -f /home/site/locks/info.lock
+            fi
+          else
+            echo "Locks directory does not exist. Skipping lock cleanup."
+          fi
+
+          # Clear deployments directory
+          if [ -d "/home/site/deployments" ]; then
+            echo "Deployments directory exists. Clearing contents..."
+            rm -rf /home/site/deployments/*
+          else
+            echo "Deployments directory does not exist. Skipping cleanup."
+          fi
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
