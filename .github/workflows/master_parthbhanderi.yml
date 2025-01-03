@@ -106,18 +106,6 @@ jobs:
           else
             echo "Deployments directory does not exist. Skipping cleanup."
           fi
-      
-      - name: Configure App Service settings
-        uses: Azure/appservice-settings@v1
-        with:
-          app-name: 'parthb'
-          app-settings-json: |
-            [
-              {
-                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-                "value": "true"
-              }
-            ]
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
