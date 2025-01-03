@@ -5,8 +5,8 @@ from PIL import Image
 
 
 # --- PATH SETTINGS ---
-# current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
-current_dir = Path("D:/Github Portfolio/Portfolio_Streamlit/python-multipage-webapp")
+current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+# current_dir = Path("D:/Github Portfolio/Portfolio_Streamlit/python-multipage-webapp")
 css_file = current_dir / "styles" / "main.css"
 resume_file = current_dir / "assets" / "CV.pdf"
 profile_pic = current_dir / "assets" / "profile-pic.jpg"
