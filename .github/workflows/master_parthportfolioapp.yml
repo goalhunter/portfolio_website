@@ -32,7 +32,11 @@ jobs:
           source venv/bin/activate
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
+      
+      # Set executable permissions for the run.sh script
+      - name: Set permissions for startup script
+        run: chmod +x run.sh
+        
       # Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
