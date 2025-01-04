@@ -18,7 +18,7 @@ markdown-it-py
 MarkupSafe
 mdurl
 numpy
-opencv-python
+opencv-python-headless
 packaging
 pandas
 pillow

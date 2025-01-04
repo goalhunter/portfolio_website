@@ -9,7 +9,7 @@ import numpy as np
 # Utils
 import joblib
 
-pipe_lr = joblib.load(open("artifacts\emotion_classifier_pipe_lr_12_dec_2023.pkl","rb"))
+pipe_lr = joblib.load(open("artifacts/emotion_classifier_pipe_lr_12_dec_2023.pkl","rb"))
 
 # Functions
 def predict_emotions(docx):
