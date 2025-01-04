@@ -7,9 +7,11 @@ import pandas as pd
 import numpy as np
 
 # Utils
+import os
 import joblib
 
-pipe_lr = joblib.load(open("artifacts/emotion_classifier_pipe_lr_12_dec_2023.pkl","rb"))
+file_path = os.path.join("artifacts", "emotion_classifier_pipe_lr_12_dec_2023.pkl")
+pipe_lr = joblib.load(open(file_path,"rb"))
 
 # Functions
 def predict_emotions(docx):
